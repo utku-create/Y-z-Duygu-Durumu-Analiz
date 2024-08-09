@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from tkinter import Tk, Button, Label, filedialog
 from PIL import Image, ImageTk
 
+# Yüz tespiti için Haarcascade yükledim
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
 #fonksiyonlar
 def analyze_emotion(image_path):
     img = cv2.imread(image_path)
@@ -42,18 +45,26 @@ def analyze_emotion_live():
             print("Kamera açılmadı")
             break
 
+        img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(img_gray, scaleFactor=1.1, minNeighbors=5, minSize=(100, 100))
+
         img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        try:
-            analysis = DeepFace.analyze(img_rgb, actions=['emotion'], enforce_detection=False)
+        for (x, y, w, h) in faces:
+            face_roi = img_rgb[y:y+h, x:x+w]  # Yüz bölgesini kırp
 
-            if isinstance(analysis, list):
-                analysis = analysis[0]
+            try:
+                analysis = DeepFace.analyze(face_roi, actions=['emotion'], enforce_detection=False)
 
-            dominant_emotion = analysis['dominant_emotion']
-            cv2.putText(frame, f'Duygu: {dominant_emotion}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-        except:
-            pass
+                if isinstance(analysis, list):
+                    analysis = analysis[0]
+
+                dominant_emotion = analysis['dominant_emotion']
+
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                cv2.putText(frame, f'Duygu: {dominant_emotion}', (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+            except Exception as e:
+                print("Analiz hatası:", e)
 
         cv2.imshow('Kamera - Duygu Durumu Analizi', frame)
 
@@ -74,6 +85,14 @@ select_button.pack(pady=20)
 
 camera_button = Button(root, text="Kamera ile Anlık Analiz", command=analyze_emotion_live)
 camera_button.pack(pady=20)
+
+preview_label = Label(root)
+preview_label.pack()
+
+root.mainloop()
+
+
+
 
 preview_label = Label(root)
 preview_label.pack()
