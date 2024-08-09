@@ -2,8 +2,4 @@ Yüz Duygu Durum Analizi
 
 Hocam selamlar,
 
-Şu an projem bu haliyle kamera ile duygu durumunu ölçebiliyor. 
-Sadece tiksinme ifadesinde kafası biraz karışıyor onun dışında hepsini tam isabet tahmin edebiliyor. 
-Ayrıca fotoğraf üstünden de analizi yapabiliyor. 
-Buna ek olarak cinsiyet ve yaş da eklemeyi düşünüyorum. 
-Ardından da sizin söylediğiniz eklentileri ekleyeceğim.
+Şu an projem fotoğraf ve kamera'dan duygu durumu analizi yapılabiliyor. Kameradan yüz tespiti yapılıyor ve duygu durumumuzu veriyor. Fotoğrafta ise direkt duygu durumumuzu net şekilde tespit edebiliyor. Bunlar bir ekranda iki ayrı buton şeklinde ayrı şekilde bulunuyor. Projemin güncel hali budur. 
