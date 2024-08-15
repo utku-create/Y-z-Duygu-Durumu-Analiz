@@ -1,14 +1,18 @@
-#import kısmı
+#başarım oranını ölçen asıl kodum
+
 import cv2
 from deepface import DeepFace
 import matplotlib.pyplot as plt
 from tkinter import Tk, Button, Label, filedialog
 from PIL import Image, ImageTk
+from sklearn.metrics import accuracy_score, classification_report
+import os
 
 # Yüz tespiti için Haarcascade yükledim
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-#fonksiyonlar
+
+# Duygu analizi fonksiyonu
 def analyze_emotion(image_path):
     img = cv2.imread(image_path)
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -25,6 +29,8 @@ def analyze_emotion(image_path):
     plt.axis('off')
     plt.show()
 
+
+# Dosya açma fonksiyonu
 def open_file():
     file_path = filedialog.askopenfilename(title="Bir resim seçin", filetypes=[("Image files", "*.jpg *.jpeg *.png")])
 
@@ -36,6 +42,8 @@ def open_file():
         preview_label.image = img
         analyze_emotion(file_path)
 
+
+# Canlı kamera duygu analizi fonksiyonu
 def analyze_emotion_live():
     cap = cv2.VideoCapture(0)
 
@@ -51,7 +59,7 @@ def analyze_emotion_live():
         img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         for (x, y, w, h) in faces:
-            face_roi = img_rgb[y:y+h, x:x+w]  # Yüz bölgesini kırp
+            face_roi = img_rgb[y:y + h, x:x + w]  # Yüz bölgesini kırp
 
             try:
                 analysis = DeepFace.analyze(face_roi, actions=['emotion'], enforce_detection=False)
@@ -61,8 +69,9 @@ def analyze_emotion_live():
 
                 dominant_emotion = analysis['dominant_emotion']
 
-                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                cv2.putText(frame, f'Duygu: {dominant_emotion}', (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                cv2.putText(frame, f'Duygu: {dominant_emotion}', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
+                            (0, 255, 0), 2)
             except Exception as e:
                 print("Analiz hatası:", e)
 
@@ -74,8 +83,45 @@ def analyze_emotion_live():
     cap.release()
     cv2.destroyAllWindows()
 
-#ekran kısmı
 
+# Test veri kümesi ile başarı ölçümü
+def measure_performance(test_folder):
+    true_labels = []  # Gerçek etiketler
+    predicted_labels = []  # Tahmin edilen etiketler
+
+    for image_file in os.listdir("C:/Users/utku/Desktop/test_images"):
+        if image_file.endswith(('jpg', 'jpeg', 'png')):
+            image_path = os.path.join(test_folder, image_file)
+
+            # Gerçek etiketi belirleyin (örneğin, dosya adında olabilir)
+            # Örnek: 'happy_image1.jpg' dosya adından 'happy' etiketini çıkarıyoruz
+            true_label = image_file.split('_')[0]  # Dosya adından etiketi çıkarma örneği
+            true_labels.append(true_label)
+
+            # DeepFace ile duygu analizi yapın
+            try:
+                img = cv2.imread(image_path)
+                img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                analysis = DeepFace.analyze(img_rgb, actions=['emotion'], enforce_detection=False)
+
+                if isinstance(analysis, list):
+                    analysis = analysis[0]
+
+                predicted_emotion = analysis['dominant_emotion']
+                predicted_labels.append(predicted_emotion)
+
+            except Exception as e:
+                print(f"Analiz hatası {image_file}: {e}")
+
+    # Başarım oranı ölçme (Doğruluk, sınıflandırma raporu)
+    accuracy = accuracy_score(true_labels, predicted_labels)
+    report = classification_report(true_labels, predicted_labels)
+
+    print(f"Doğruluk Oranı: {accuracy}")
+    print("Sınıflandırma Raporu:\n", report)
+
+
+# GUI Arayüzü
 root = Tk()
 root.title("Duygu Durumu Analizi")
 root.geometry("400x400")
@@ -86,13 +132,10 @@ select_button.pack(pady=20)
 camera_button = Button(root, text="Kamera ile Anlık Analiz", command=analyze_emotion_live)
 camera_button.pack(pady=20)
 
-preview_label = Label(root)
-preview_label.pack()
+# Performans ölçüm butonu
+performance_button = Button(root, text="Test Veri Kümesi ile Başarı Ölç", command=lambda: measure_performance('C:/Users/utku/Desktop/test_images'))
 
-root.mainloop()
-
-
-
+performance_button.pack(pady=20)
 
 preview_label = Label(root)
 preview_label.pack()
